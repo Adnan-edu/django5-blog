@@ -15,5 +15,6 @@
     </p>
     {{ post.body|truncatewords:30|linebreaks }}
   {% endfor %}
-  {% include "pagination.html" with page=posts %}
+  <!-- Django's ListView generic view passes the page requested in a variable called 'page_obj' -->
+  {% include "pagination.html" with page=page_obj %}
 {% endblock %}
