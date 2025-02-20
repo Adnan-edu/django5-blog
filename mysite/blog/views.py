@@ -13,6 +13,7 @@ from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank
 )
+from django.contrib.postgres.search import TrigramSimilarity
 
 # Create your views here.
 from .models import Post
@@ -177,10 +178,9 @@ def post_search(request):
             search_query = SearchQuery(query)
             results = (
                 Post.published.annotate(
-                    search=search_vector,
-                    rank=SearchRank(search_vector, search_query) # Order the results by relevancy
-                ).filter(rank__gte=0.3) # Display only the ones with a rank higher than 0.3
-                 .order_by('-rank') # Number of occurrences of the word in the title and body of the posts
+                    similarity=TrigramSimilarity('title', query)
+                ).filter(similarity__gt=0.1) 
+                 .order_by('-similarity')
             )
     return render(
         request,
