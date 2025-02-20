@@ -8,6 +8,11 @@ from django.views.decorators.http import require_POST
 from taggit.models import Tag
 from django.db.models import Count
 from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import (
+    SearchVector,
+    SearchQuery,
+    SearchRank
+)
 
 # Create your views here.
 from .models import Post
@@ -168,10 +173,14 @@ def post_search(request):
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
+            search_vector = SearchVector('title', 'body')
+            search_query = SearchQuery(query)
             results = (
                 Post.published.annotate(
-                    search=SearchVector('title', 'body'),
-                ).filter(search=query)
+                    search=search_vector,
+                    rank=SearchRank(search_vector, search_query) # Order the results by relevancy
+                ).filter(search=search_query)
+                 .order_by('-rank') # Number of occurrences of the word in the title and body of the posts
             )
     return render(
         request,
