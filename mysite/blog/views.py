@@ -173,13 +173,13 @@ def post_search(request):
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
-            search_vector = SearchVector('title', 'body')
+            search_vector = SearchVector('title', weight='A') + SearchVector('body', weight='B') # Title matches will prevail over body content matches 
             search_query = SearchQuery(query)
             results = (
                 Post.published.annotate(
                     search=search_vector,
                     rank=SearchRank(search_vector, search_query) # Order the results by relevancy
-                ).filter(search=search_query)
+                ).filter(rank__gte=0.3) # Display only the ones with a rank higher than 0.3
                  .order_by('-rank') # Number of occurrences of the word in the title and body of the posts
             )
     return render(
